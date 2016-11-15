@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CalculationEngine.CalculationModel">
+    <Position X="3.25" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>IoAAACCJCQEGhSACKEiBAgQEAABQKEAQAEIEKAAAAEI=</HashCode>
+      <FileName>CalculationEngine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormAbout" Collapsed="true">
+    <Position X="7.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAIACAAABAAAACAAAACAAAAAAAAAAAAAgAAAAA=</HashCode>
+      <FileName>FormAbout.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormAddAssessment" Collapsed="true">
+    <Position X="5.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAECAAABACAACAAAAKAAQAAAAAAAAUAAAAAAA=</HashCode>
+      <FileName>FormAddAssessment.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormConfig" Collapsed="true">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gQAAAAAAECAACAAAAACAAAACAAQAAACAgAAACEAAAAA=</HashCode>
+      <FileName>FormConfig.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormLink" Collapsed="true">
+    <Position X="7.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAECABABBCAAiAAAAKAAQAQAAAAAAAKAAFAAA=</HashCode>
+      <FileName>FormLink.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormPublishVersion" Collapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IQAAAAACECAAAAQAAAKAAAACCAQEAAAAAAAASAAgIBA=</HashCode>
+      <FileName>FormPublishVersion.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormTest" Collapsed="true">
+    <Position X="7.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAIACAAAAAAAACAAAACAAAAAAAAAAQACAAAAAA=</HashCode>
+      <FileName>FormResults.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.FormUpload" Collapsed="true">
+    <Position X="7.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAoAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAE=</HashCode>
+      <FileName>FormUpload.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.ThisWorkbook">
+    <Position X="0.5" Y="0.5" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>UAAgAAAQCAAAEQAgAwAAgBkAAEAAABAQAAhAICAABCg=</HashCode>
+      <FileName>ThisWorkbook.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CalculationEngine.Ribbon1" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAQCAAABEAEACgIAACiQAAAAAgACIUAAAAMAA=</HashCode>
+      <FileName>RibbonCalculationEngine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
