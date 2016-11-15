@@ -120,9 +120,6 @@
             // comboBoxEnvironment
             // 
             this.comboBoxEnvironment.FormattingEnabled = true;
-            this.comboBoxEnvironment.Items.AddRange(new object[] {
-            "TEST",
-            "LIVE"});
             this.comboBoxEnvironment.Location = new System.Drawing.Point(94, 9);
             this.comboBoxEnvironment.Name = "comboBoxEnvironment";
             this.comboBoxEnvironment.Size = new System.Drawing.Size(156, 21);

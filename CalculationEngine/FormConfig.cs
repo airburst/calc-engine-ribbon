@@ -81,15 +81,6 @@ namespace CalculationEngine
             int emptyRowCount = EmptyRowCount();
         }
 
-        // Set Tooltips for each row
-        //private void DataGridViewConfig_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        //{
-        //    if ((e.ColumnIndex == this.DataGridViewConfig.Columns["Value"].Index) && (e.Value != null))
-        //    {
-        //        var cell = this.DataGridViewConfig.Rows[e.RowIndex].Cells["Value"];
-        //        cell.ToolTipText = "TEST";//this.DataGridViewConfig.Rows[e.RowIndex].Cells["Value"].Value.ToString();
-        //    }
-        //}
 
         private int EmptyRowCount()
         {
@@ -101,7 +92,7 @@ namespace CalculationEngine
                 // If OLM_ShowLinkButton is not 'Y' then ignore integration properties items
                 if (ShowIntegration == false)
                 {
-                    if (((row.Cells[1].Value == null) || ((string)row.Cells[1].Value == "")) && ((string)row.Cells[0].Value != "OLM_IntegrationPropertiesTest") && ((string)row.Cells[0].Value != "OLM_IntegrationPropertiesLive"))
+                    if (((row.Cells[1].Value == null) || ((string)row.Cells[1].Value == "")) && (!row.Cells[0].Value.ToString().Contains("OLM_IntegrationProperties")))
                     {
                         // Highlight the row
                         row.DefaultCellStyle.BackColor = System.Drawing.Color.Red;
@@ -150,6 +141,9 @@ namespace CalculationEngine
 
             // Set DialogResult to OK
             this.DialogResult = DialogResult.OK;
+
+            // Empty Document Properties
+            Globals.ThisWorkbook.ClearDocumentProperties();
 
             // Fetch all values from DataGrid and write back to Document Properties
             foreach (DataGridViewRow row in this.DataGridViewConfig.Rows)
@@ -218,7 +212,7 @@ namespace CalculationEngine
             // Remove integration settings
             foreach (DataGridViewRow row in DataGridViewConfig.Rows)
             {
-                if (((string)row.Cells[0].Value == "OLM_IntegrationPropertiesTest") || ((string)row.Cells[0].Value == "OLM_IntegrationPropertiesLive"))
+                if ((row.Cells[0].Value != null) && (row.Cells[0].Value.ToString().Contains("OLM_IntegrationProperties")))
                 {
                     // Hide the row
                     row.Visible = false;
@@ -231,7 +225,7 @@ namespace CalculationEngine
             // Remove integration settings
             foreach (DataGridViewRow row in DataGridViewConfig.Rows)
             {
-                if (((string)row.Cells[0].Value == "OLM_IntegrationPropertiesTest") || ((string)row.Cells[0].Value == "OLM_IntegrationPropertiesLive"))
+                if ((row.Cells[0].Value != null) && (row.Cells[0].Value.ToString().Contains("OLM_IntegrationProperties")))
                 {
                     // Hide the row
                     row.Visible = true;
@@ -272,6 +266,131 @@ namespace CalculationEngine
             else
             {
                 return true;
+            }
+        }
+
+        private void ButtonEnvironments_Click(object sender, EventArgs e)
+        {
+            FormEnvironments f = new FormEnvironments();
+            DialogResult dr = f.ShowDialog();
+
+            // Get the current environment list
+            List<CalculonEnvironment> oldEnvironmentList = new List<CalculonEnvironment>();
+            CalculationModel model = new CalculationModel();
+            oldEnvironmentList = model.EnvironmentList;
+
+            // Test for Add pressed
+            if (dr == DialogResult.OK)
+            {
+                // Test for match on Oldname in new list from form (renamed environments)
+                foreach (CalculonEnvironment oldEnv in oldEnvironmentList)
+                {
+                    bool matched = false;
+                    foreach (CalculonEnvironment env in f.EnvironmentList)
+                    {
+                        if (oldEnv.Name == env.Oldname)
+                        {
+                            // Update name
+                            oldEnv.Name = env.Name;
+                            env.Oldname = "_matched";
+                            matched = true;
+                        }
+                        else
+                        {
+                            if (oldEnv.Name == env.Name)
+                            {
+                                env.Oldname = "_matched";
+                                matched = true;
+                            }
+                        }
+                    }
+                    if (matched == false)
+                    {
+                        // Flag the record for deletion
+                        // We cannot remove inside the foreach loop
+                        oldEnv.Oldname = "_delete";
+                    }
+                }
+
+                // Loop through unmatched new records and add
+                foreach (CalculonEnvironment env in f.EnvironmentList)
+                {
+                    if (env.Oldname != "_matched") {
+                        oldEnvironmentList.Add(env);
+                    }
+                }
+
+                // Loop through records flagged for deletion and delete
+                for (int i = 0; i < oldEnvironmentList.Count; i++ )
+                {
+                    if (oldEnvironmentList[i].Oldname == "_delete")
+                    {
+                        oldEnvironmentList.Remove(oldEnvironmentList[i]);
+                        i--;
+                    }
+                }
+
+                // Update the list of environments in Document Properties and this settings dialog
+                // First get current config table into list
+                List<string[]> configTable = new List<string[]>();
+                foreach (DataGridViewRow row in this.DataGridViewConfig.Rows)
+                {
+                    configTable.Add (new string[] {row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString()});
+                }
+
+                // Update environment details in list
+                for (int i = 0; i < configTable.Count; i++)
+                {
+                    if ((configTable[i][0].Contains("OLM_Environment")) || (configTable[i][0].Contains("OLM_Url")) || (configTable[i][0].Contains("OLM_IntegrationProperties")))
+                    {
+                        // Get rid and decrement counter
+                        configTable.RemoveAt(i--);
+                    }
+                }
+
+                // Add the environment collection back in at the top
+                int ii = 1;
+                foreach (CalculonEnvironment oldEnv in oldEnvironmentList)
+                {
+                    configTable.Insert(ii-1, new string[] { "OLM_Environment" + ii++, oldEnv.Name });
+                }
+                // And then the connection details
+                ii--;
+                foreach (CalculonEnvironment oldEnv in oldEnvironmentList)
+                {
+                    configTable.Insert(ii++, new string[] { "OLM_Url" + oldEnv.Name, oldEnv.Url });
+                    configTable.Insert(ii++, new string[] { "OLM_IntegrationProperties" + oldEnv.Name, oldEnv.IntegrationPath });
+                }
+
+                // Refresh DataGrid
+                this.DataGridViewConfig.Rows.Clear();
+                foreach (string[] item in configTable)
+                {
+                    this.DataGridViewConfig.Rows.Add(new string[] {item[0], item[1]});
+                }
+
+                // Remove integration properties
+                if (ShowIntegration == false)
+                {
+                    removeIntegrationSettings();
+                }
+
+                // Highlight unset values
+                foreach (DataGridViewRow row in DataGridViewConfig.Rows)
+                {
+                    if (((string)row.Cells[1].Value == "") || ((string)row.Cells[1].Value == null))
+                    {
+                        // Highlight the row
+                        row.DefaultCellStyle.BackColor = System.Drawing.Color.Red;
+                    }
+                }
+
+                // Disable OK button if any cells are still empty
+                int emptyRowCount = EmptyRowCount();
+
+
+                // Dispose of the child form object
+                f.Dispose();
             }
         }
     }

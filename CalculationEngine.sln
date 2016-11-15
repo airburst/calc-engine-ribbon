@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalculationEngine", "CalculationEngine\CalculationEngine.csproj", "{9BEDE1A4-BA29-4E12-A685-D12EBCE3E854}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Calc Engine Ribbon Setup", "Calc Engine Ribbon Setup\Calc Engine Ribbon Setup.vdproj", "{A073CFA9-BCCD-4EB6-A53A-03BF280A664F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,8 @@ Global
 		{9BEDE1A4-BA29-4E12-A685-D12EBCE3E854}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BEDE1A4-BA29-4E12-A685-D12EBCE3E854}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BEDE1A4-BA29-4E12-A685-D12EBCE3E854}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A073CFA9-BCCD-4EB6-A53A-03BF280A664F}.Debug|Any CPU.ActiveCfg = Debug
+		{A073CFA9-BCCD-4EB6-A53A-03BF280A664F}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

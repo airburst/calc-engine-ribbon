@@ -21,15 +21,17 @@ namespace CalculationEngine
 
             // Set default parameters
             // String array [Name, PropertyName, Default Value]
+            ConfigList.Add(new string[] { "Environment 1", "OLM_Environment1", "Test" });
+            ConfigList.Add(new string[] { "Environment 2", "OLM_Environment2", "Live" });
+            ConfigList.Add(new string[] { "Calc Engine Url 1", "OLM_UrlTest", "" });
+            ConfigList.Add(new string[] { "Calc Engine Url 2", "OLM_UrlLive", "" });
+            ConfigList.Add(new string[] { "Integration Properties Location 1", "OLM_IntegrationPropertiesTest", "" });
+            ConfigList.Add(new string[] { "Integration Properties Location 2", "OLM_IntegrationPropertiesLive", "" });
             ConfigList.Add(new string[] { "Version Number", "OLM_ModelVersion", "0.0" });
-            ConfigList.Add(new string[] { "Calc Engine Url [TEST]", "OLM_UrlTest", "" });
-            ConfigList.Add(new string[] { "Calc Engine Url [LIVE]", "OLM_UrlLive", "" });
-            ConfigList.Add(new string[] { "Upload Method", "OLM_UploadMethod", "calc/add.cfm" });
-            ConfigList.Add(new string[] { "Calculate Method", "OLM_CalculateMethod", "calc/ws/calcService.cfc" });
             ConfigList.Add(new string[] { "Version History Network Path", "OLM_NetworkLocation", "" });
             ConfigList.Add(new string[] { "Show Link Button", "OLM_ShowLinkButton", "Y" });
-            ConfigList.Add(new string[] { "Integration Properties Location [TEST]", "OLM_IntegrationPropertiesTest", "" });
-            ConfigList.Add(new string[] { "Integration Properties Location [LIVE]", "OLM_IntegrationPropertiesLive", "" });
+            ConfigList.Add(new string[] { "Upload Method", "OLM_UploadMethod", "calc/add.cfm" });
+            ConfigList.Add(new string[] { "Calculate Method", "OLM_CalculateMethod", "calc/ws/calcService.cfc" });
             ConfigList.Add(new string[] { "Version History Folder", "OLM_VersionFolderName", "Versions" });
             ConfigList.Add(new string[] { "Matched Test", "OLM_MatchText", "OK" });
             ConfigList.Add(new string[] { "Unmatched Text", "OLM_NotMatchText", "ERROR" });
@@ -101,6 +103,20 @@ namespace CalculationEngine
             foreach (Office.DocumentProperty prop in properties)
             {
                 if (prop.Name == propertyName)
+                {
+                    prop.Delete();
+                }
+            }
+        }
+
+        public void ClearDocumentProperties()
+        {
+            Office.DocumentProperties properties;
+            properties = (Office.DocumentProperties)Globals.ThisWorkbook.CustomDocumentProperties;
+
+            foreach (Office.DocumentProperty prop in properties)
+            {
+                if (prop.Name.Contains("OLM_"))
                 {
                     prop.Delete();
                 }

@@ -20,7 +20,7 @@
     <PublishUrl>C:\Release\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.3.1.1</ApplicationVersion>
+    <ApplicationVersion>1.3.2.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -90,7 +90,7 @@
     <ManifestKeyFile>olmsys_codesign.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>687F79CE82A871BD16EE00339EAA4928A76689E0</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>402D34CEA10264E00513DE4DE410CB3A78DAD727</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -144,6 +144,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddEnvironment.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddEnvironment.Designer.cs">
+      <DependentUpon>AddEnvironment.cs</DependentUpon>
+    </Compile>
     <Compile Include="ExcelFormula.cs" />
     <Compile Include="ExcelFormulaToken.cs" />
     <Compile Include="ExcelSupportedFunctions.cs" />
@@ -164,6 +170,12 @@
     </Compile>
     <Compile Include="FormConfig.Designer.cs">
       <DependentUpon>FormConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormEnvironments.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormEnvironments.Designer.cs">
+      <DependentUpon>FormEnvironments.cs</DependentUpon>
     </Compile>
     <Compile Include="FormFormulae.cs">
       <SubType>Form</SubType>
@@ -222,6 +234,9 @@
     <Compile Include="ThisWorkbook.Designer.cs">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="AddEnvironment.resx">
+      <DependentUpon>AddEnvironment.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormAbout.resx">
       <DependentUpon>FormAbout.cs</DependentUpon>
     </EmbeddedResource>
@@ -230,6 +245,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormConfig.resx">
       <DependentUpon>FormConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormEnvironments.resx">
+      <DependentUpon>FormEnvironments.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormFormulae.resx">
       <DependentUpon>FormFormulae.cs</DependentUpon>

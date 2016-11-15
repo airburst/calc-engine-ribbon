@@ -32,6 +32,7 @@
             this.ButtonOK = new System.Windows.Forms.Button();
             this.ButtonCancel = new System.Windows.Forms.Button();
             this.labelText = new System.Windows.Forms.Label();
+            this.ButtonEnvironments = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridViewConfig)).BeginInit();
             this.SuspendLayout();
             // 
@@ -73,12 +74,23 @@
             this.labelText.TabIndex = 3;
             this.labelText.Text = "Edit configuration values in the table below";
             // 
+            // ButtonEnvironments
+            // 
+            this.ButtonEnvironments.Location = new System.Drawing.Point(12, 320);
+            this.ButtonEnvironments.Name = "ButtonEnvironments";
+            this.ButtonEnvironments.Size = new System.Drawing.Size(81, 23);
+            this.ButtonEnvironments.TabIndex = 4;
+            this.ButtonEnvironments.Text = "Environments";
+            this.ButtonEnvironments.UseVisualStyleBackColor = true;
+            this.ButtonEnvironments.Click += new System.EventHandler(this.ButtonEnvironments_Click);
+            // 
             // FormConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(492, 352);
+            this.Controls.Add(this.ButtonEnvironments);
             this.Controls.Add(this.labelText);
             this.Controls.Add(this.ButtonCancel);
             this.Controls.Add(this.ButtonOK);
@@ -98,5 +110,6 @@
         private System.Windows.Forms.Button ButtonOK;
         private System.Windows.Forms.Button ButtonCancel;
         private System.Windows.Forms.Label labelText;
+        private System.Windows.Forms.Button ButtonEnvironments;
     }
 }

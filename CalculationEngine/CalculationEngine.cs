@@ -25,6 +25,17 @@ namespace CalculationEngine
         public Boolean Linked {get; set;}
         public string LinkedModel { get; set; }
     }
+
+    // Class definition for an environment; added to hold flexible environment list
+    public class CalculonEnvironment
+    {
+        public string Name { get; set; }
+        public string Url { get; set; }
+        public string CalculateUrl { get; set; }
+        public string UploadUrl { get; set; }
+        public string IntegrationPath { get; set; }
+        public string Oldname { get; set; }
+    }
     
     // Main Class
     public class CalculationModel
@@ -34,20 +45,12 @@ namespace CalculationEngine
         //==============================================================================================
         public string Name;
         public string Version;
-        public string CalculateUrlTest;
-        public string CalculateUrlLive;
-        public string UploadUrlTest;
-        public string UploadUrlLive;
-        public string IntegrationPropertiesTest;
-        public string IntegrationPropertiesLive;
+        public List<CalculonEnvironment> EnvironmentList;
         public string MatchText;
         public string NotMatchText;
         public double Tolerance;
         public string ProductVersion;
         public string DefaultCommentTag;
-
-        private string urlTest;
-        private string urlLive;
         private string VersionFolderName;
         private string NetworkLocation;
         private string SDSMode;
@@ -57,19 +60,36 @@ namespace CalculationEngine
         //==============================================================================================
         public CalculationModel()
         {
+            // Get number of environments
+            int i = 1;
+            while (Globals.ThisWorkbook.ReadDocumentProperty("OLM_Environment" + i) != null) {
+                i++;
+            }
+            int environmentCount = i - 1;
+            
             // Initialise variables
             Name = GetWorkbookStub();
             Version = Globals.ThisWorkbook.ReadDocumentProperty("OLM_ModelVersion");
-            // TEST Endpoints
-            urlTest = AddSlash(Globals.ThisWorkbook.ReadDocumentProperty("OLM_UrlTest"));  
-            CalculateUrlTest = urlTest + Globals.ThisWorkbook.ReadDocumentProperty("OLM_CalculateMethod");  
-            UploadUrlTest = urlTest + Globals.ThisWorkbook.ReadDocumentProperty("OLM_UploadMethod");
-            IntegrationPropertiesTest = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesTest");
-            // LIVE Endpoints
-            urlLive = AddSlash(Globals.ThisWorkbook.ReadDocumentProperty("OLM_UrlLive"));  
-            CalculateUrlLive = urlLive + Globals.ThisWorkbook.ReadDocumentProperty("OLM_CalculateMethod");
-            IntegrationPropertiesLive = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesLive");
-            UploadUrlLive = urlLive + Globals.ThisWorkbook.ReadDocumentProperty("OLM_UploadMethod");
+
+            // Environments
+            EnvironmentList = new List<CalculonEnvironment>();
+            if (i > 1)
+            {
+                for (int j = 1; j < i; j++)
+                {
+                    // Fetch details from Document Properties
+                    CalculonEnvironment env = new CalculonEnvironment();
+                    env.Name = Globals.ThisWorkbook.ReadDocumentProperty("OLM_Environment" + j);
+                    env.Url = slashUrl(Globals.ThisWorkbook.ReadDocumentProperty("OLM_Url" + env.Name));
+                    env.IntegrationPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationProperties" + env.Name);
+                    env.CalculateUrl = env.Url + Globals.ThisWorkbook.ReadDocumentProperty("OLM_CalculateMethod");
+                    env.UploadUrl = env.Url + Globals.ThisWorkbook.ReadDocumentProperty("OLM_UploadMethod");
+
+                    // Add to collection
+                    EnvironmentList.Add(env);
+                }
+            }
+
             // General
             MatchText = Globals.ThisWorkbook.ReadDocumentProperty("OLM_MatchText");
             NotMatchText = Globals.ThisWorkbook.ReadDocumentProperty("OLM_NotMatchText");
@@ -177,59 +197,66 @@ namespace CalculationEngine
         //==============================================================================================
         public bool Publish(string Environment)
         {
-            // Set UploadUrl
-            string uploadUrl;
-            if (Environment == "LIVE")
-            {
-                uploadUrl = this.UploadUrlLive;
-            }
-            else
-            {
-                uploadUrl = this.UploadUrlTest;
-            }
-
-            // Reset all input cells to default values
-            this.Reset();
+            // Set Upload Url
+            string uploadUrl = getEnvironmentProperty(Environment, "Upload");   
             
-            // Save a versioned copy of the file
-            string filepath = this.SaveModel();
-            if (filepath == null)
+            // Test for null return
+            if (uploadUrl != null)
             {
-                return false;
-            }
-            else {
-                // Read file data
-                FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
-                byte[] data = new byte[fs.Length];
-                fs.Read(data, 0, data.Length);
-                fs.Close();
 
-                // Generate post objects to match form controls
-                Dictionary<string, object> postParameters = new Dictionary<string, object>();
-                postParameters.Add("overwrite", "true");
-                postParameters.Add("validate", "true");
-                // Note: this expects xlsx file format
-                postParameters.Add("workbook", new FormUpload.FileParameter(data, filepath, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+                // Reset all input cells to default values
+                this.Reset();
 
-                // Create request and receive response
-                string userAgent = "";
-                HttpWebResponse webResponse = FormUpload.MultipartFormDataPost(uploadUrl, userAgent, postParameters, ProductVersion);
-                if (webResponse != null)
-                {
-                    // Process response
-                    StreamReader responseReader = new StreamReader(webResponse.GetResponseStream());
-                    string fullResponse = responseReader.ReadToEnd();
-
-                    // Success Message; return Header Message from Calculon
-                    MessageBox.Show(webResponse.Headers["Message"]);
-                    webResponse.Close();
-
-                    return true;
-                }
-                else
+                // Save a versioned copy of the file
+                string filepath = this.SaveModel();
+                if (filepath == null)
                 {
                     return false;
                 }
+                else
+                {
+                    // Read file data
+                    FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
+                    byte[] data = new byte[fs.Length];
+                    fs.Read(data, 0, data.Length);
+                    fs.Close();
+
+                    // Generate post objects to match form controls
+                    Dictionary<string, object> postParameters = new Dictionary<string, object>();
+                    postParameters.Add("overwrite", "true");
+                    postParameters.Add("validate", "true");
+                    // Note: this expects xlsx file format
+                    postParameters.Add("workbook", new FormUpload.FileParameter(data, filepath, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+                    // Create request and receive response
+                    string userAgent = "";
+                    HttpWebResponse webResponse = FormUpload.MultipartFormDataPost(uploadUrl, userAgent, postParameters, ProductVersion);
+                    if (webResponse != null)
+                    {
+                        // Process response
+                        StreamReader responseReader = new StreamReader(webResponse.GetResponseStream());
+                        string fullResponse = responseReader.ReadToEnd();
+
+                        // Success Message; return Header Message from Calculon
+                        string message = webResponse.Headers["Message"];
+                        if ((message == null) || (message == ""))
+                        {
+                            message = "There was no message received from the server.  Please check that the url [" + uploadUrl + "] is correct.";
+                        }
+                        MessageBox.Show(message);
+                        webResponse.Close();
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -240,56 +267,63 @@ namespace CalculationEngine
         public List<string[]> Test()
         {
             // Send Inputs to Calculation Engine Web Service 
-            // Get current Target Environment (TEST or LIVE, as set)  Default is TEST
+            // Get current Target Environment.  Default is first environment listed
             string environment = Globals.ThisWorkbook.ReadDocumentProperty("OLM_TargetEnvironment");
-            if ((environment == null) || (environment == "")) environment = "TEST";
+            if ((environment == null) || (environment == "")) environment = this.EnvironmentList[0].Name;
 
             //Create request message
             string strRequest = CreateTestRequestXml();
-
-            // Send request
-            string resultsXml = this.SendXml(environment, strRequest);
-            if (resultsXml != null)
+            if (strRequest != null)
             {
 
-                List<string[]> resultsList = new List<string[]>();
-                List<string[]> mergeList = new List<string[]>();
-
-                try
+                // Send request
+                string resultsXml = this.SendXml(environment, strRequest);
+                if (resultsXml != null)
                 {
-                    //Load response xml
-                    XDocument xDoc = XDocument.Parse(resultsXml);
 
-                    //Parse xml ito collection                               
-                    IEnumerable<XElement> items = xDoc.Descendants("item");
-                    IEnumerable<XElement> item_list = from item in items
-                                                        select item;
+                    List<string[]> resultsList = new List<string[]>();
+                    List<string[]> mergeList = new List<string[]>();
 
-                    foreach (XElement element in item_list)
+                    try
                     {
-                        string key = element.Element("key").Value.ToString();
-                        string val = element.Element("value").Value.ToString();
-                        resultsList.Add(new string[] { key, val });
+                        //Load response xml
+                        XDocument xDoc = XDocument.Parse(resultsXml);
+
+                        //Parse xml ito collection                               
+                        IEnumerable<XElement> items = xDoc.Descendants("item");
+                        IEnumerable<XElement> item_list = from item in items
+                                                          select item;
+
+                        foreach (XElement element in item_list)
+                        {
+                            string key = element.Element("key").Value.ToString();
+                            string val = element.Element("value").Value.ToString();
+                            resultsList.Add(new string[] { key, val });
+                        }
+                        // Sort list by element name [0]
+                        resultsList.Sort(delegate(string[] r1, string[] r2) { return r1[0].CompareTo(r2[0]); });
+
+                        //Merge results from web service with spreadsheet values
+                        mergeList = this.MergeResults(resultsList);
+
+                        return mergeList;
                     }
-                    // Sort list by element name [0]
-                    resultsList.Sort(delegate(string[] r1, string[] r2) { return r1[0].CompareTo(r2[0]); });
-
-                    //Merge results from web service with spreadsheet values
-                    mergeList = this.MergeResults(resultsList);
-
-                    return mergeList;
+                    catch (NotSupportedException nsEx)
+                    //Handles bad response from web service
+                    {
+                        //Display error message
+                        MessageBox.Show("Error response from Calculation Engine service: \n\n" + resultsXml + "\n\n" + nsEx.ToString());
+                        return null;
+                    }
+                    catch (XmlException xmlEx)
+                    {
+                        //Display error message
+                        MessageBox.Show("Error parsing XML response: \n\n" + resultsXml + "\n\n" + xmlEx.ToString());
+                        return null;
+                    }
                 }
-                catch (NotSupportedException nsEx)
-                //Handles bad response from web service
+                else
                 {
-                    //Display error message
-                    MessageBox.Show("Error response from Calculation Engine service: \n\n" + resultsXml + "\n\n" + nsEx.ToString());
-                    return null;
-                }
-                catch (XmlException xmlEx)
-                {
-                    //Display error message
-                    MessageBox.Show("Error parsing XML response: \n\n" + resultsXml + "\n\n" + xmlEx.ToString());
                     return null;
                 }
             }
@@ -305,9 +339,9 @@ namespace CalculationEngine
         public List<string[]> CheckServerVersion()
         {
             // Send Inputs to Calculation Engine Web Service 
-            // Get current Target Environment (TEST or LIVE, as set)  Default is TEST
+            // Get current Target Environment.  Default is first environment listed
             string environment = Globals.ThisWorkbook.ReadDocumentProperty("OLM_TargetEnvironment");
-            if ((environment == null) || (environment == "")) environment = "TEST";
+            if ((environment == null) || (environment == "")) environment = this.EnvironmentList[0].Name;
 
             //Create request message
             string strRequest = CreateVersionCheckRequestXml();
@@ -578,19 +612,10 @@ namespace CalculationEngine
         public List<Assessment> GetAllAssessmentsFromPropertiesFile()
         {
             
-            // Get current Target Environment (TEST or LIVE, as set)  Default is TEST
+            // Get current Target Environment.  Default is first environment listed
             string environment = Globals.ThisWorkbook.ReadDocumentProperty("OLM_TargetEnvironment");
-            if ((environment == null) || (environment == "")) environment = "TEST";
-            string propertiesPath;
-            if (environment == "LIVE")
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesLive");
-            }
-            else
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesTest");
-            }
-
+            if ((environment == null) || (environment == "")) environment = this.EnvironmentList[0].Name;
+            string propertiesPath = getEnvironmentProperty(environment, "Properties");   
             List<Assessment> assessments = new List<Assessment>();
 
             // Read lines from file
@@ -648,18 +673,10 @@ namespace CalculationEngine
         //==============================================================================================
         public List<Assessment> GetLinkedAssessmentsFromPropertiesFile()
         {
-            // Get current Target Environment (TEST or LIVE, as set)  Default is TEST
+            // Get current Target Environment.  Default is first environment listed
             string environment = Globals.ThisWorkbook.ReadDocumentProperty("OLM_TargetEnvironment");
-            if ((environment == null) || (environment == "")) environment = "TEST";
-            string propertiesPath;
-            if (environment == "LIVE")
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesLive");
-            }
-            else
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesTest");
-            }
+            if ((environment == null) || (environment == "")) environment = this.EnvironmentList[0].Name;
+            string propertiesPath = getEnvironmentProperty(environment, "Properties"); 
 
             List<Assessment> assessments = new List<Assessment>();
 
@@ -693,18 +710,10 @@ namespace CalculationEngine
         //==============================================================================================
         public void UpdatePropertiesFile(List<string> AllAssessments, List<string> LinkedAssessments)
         {
-            // Get current Target Environment (TEST or LIVE, as set)  Default is TEST
+            // Get current Target Environment. Default is first environment listed
             string environment = Globals.ThisWorkbook.ReadDocumentProperty("OLM_TargetEnvironment");
-            if ((environment == null) || (environment == "")) environment = "TEST";
-            string propertiesPath;
-            if (environment == "LIVE")
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesLive");
-            }
-            else
-            {
-                propertiesPath = Globals.ThisWorkbook.ReadDocumentProperty("OLM_IntegrationPropertiesTest");
-            }
+            if ((environment == null) || (environment == "")) environment = this.EnvironmentList[0].Name;
+            string propertiesPath = getEnvironmentProperty(environment, "Properties"); 
 
             // Read lines from file
             List<string> output = new List<string>();
@@ -1003,15 +1012,7 @@ namespace CalculationEngine
         private string SendXml(string Environment, string requestMessage)
         {
             //Fetch endpoint from app.config
-            string calcUrl;
-            if (Environment == "LIVE")
-            {
-                calcUrl = this.CalculateUrlLive;
-            }
-            else
-            {
-                calcUrl = this.CalculateUrlTest;
-            }
+            string calcUrl = getEnvironmentProperty(Environment, "Calculate"); 
 
             //Set values for the request
             try
@@ -1070,6 +1071,37 @@ namespace CalculationEngine
 
 
         //==============================================================================================
+        // Function to get the calculate or upload Url for a specified environment name and type
+        //==============================================================================================
+        private string getEnvironmentProperty(string environment, string type)
+        {
+            if (environment != "")
+            {
+                string property = "";
+                for (int i = 0; i < this.EnvironmentList.Count; i++)
+                {
+                    if (environment == this.EnvironmentList[i].Name)
+                    {
+                        switch (type)
+                        {
+                            case "Calculate":
+                                property = this.EnvironmentList[i].CalculateUrl;
+                                break;
+                            case "Upload":
+                                property = this.EnvironmentList[i].UploadUrl;
+                                break;
+                            case "Properties":
+                                property = this.EnvironmentList[i].IntegrationPath;
+                                break;
+                        }
+                    }
+                }
+                return property;
+            }
+            else return null;
+        }
+
+        //==============================================================================================
         // Return a list of cells with comments matching cellType, e.g. 'I' or 'O', etc.
         //==============================================================================================
         private List<string[]> GetTaggedCells(string cellType)
@@ -1079,43 +1111,52 @@ namespace CalculationEngine
             string comment;
             string cellName;
 
-            foreach (Excel.Worksheet ws in Globals.ThisWorkbook.Worksheets)
+            for (int cnt = 1; cnt < Globals.ThisWorkbook.Worksheets.Count; cnt++)
             {
                 //Establish used range of worksheet
+                Excel.Worksheet ws = Globals.ThisWorkbook.Worksheets[cnt];
                 Excel.Range rg = GetRealRange(ws);
 
-                string newValue = "";
-
-                //Iterate over cells to find comments
-                for (int i = 1; i <= rg.Rows.Count; i++)
+                if (rg != null)
                 {
-                    for (int j = 1; j <= rg.Columns.Count; j++)
+                    string newValue = "";
+
+                    //Iterate over cells to find comments
+                    for (int i = 1; i <= rg.Rows.Count; i++)
                     {
-                        if (rg.Cells[i, j].Comment != null)
+                        for (int j = 1; j <= rg.Columns.Count; j++)
                         {
-                            //Test for type I|O as per parameter cellType
-                            comment = rg.Cells[i, j].Comment.Text;
-                            if (GetCommentType(comment, cellType) != null )
+                            if (rg.Cells[i, j].Comment != null)
                             {
-                                cellName = GetCommentName(comment, cellType);
-
-                                // Handle empty cell
-                                if (rg.Cells[i, j].Value != null) 
+                                //Test for type I|O as per parameter cellType
+                                comment = rg.Cells[i, j].Comment.Text;
+                                if (GetCommentType(comment, cellType) != null)
                                 {
-                                    newValue = rg.Cells[i, j].Value.ToString();
-                                }
+                                    cellName = GetCommentName(comment, cellType);
 
-                                // If we are matching on defaults, then update cell
-                                if (cellType == this.DefaultCommentTag)
-                                {
-                                    rg.Cells[i, j].Value = cellName;
-                                }
+                                    // Handle empty cell
+                                    if (rg.Cells[i, j].Value != null)
+                                    {
+                                        newValue = rg.Cells[i, j].Value.ToString();
+                                    }
 
-                                //Append to the list: Mapping name, value, sheet name and cell coordinates
-                                commentList.Add(new string[] { cellName, newValue, ws.Name, i.ToString(), j.ToString() });
+                                    // If we are matching on defaults, then update cell
+                                    if (cellType == this.DefaultCommentTag)
+                                    {
+                                        rg.Cells[i, j].Value = cellName;
+                                    }
+
+                                    //Append to the list: Mapping name, value, sheet name and cell coordinates
+                                    commentList.Add(new string[] { cellName, newValue, ws.Name, i.ToString(), j.ToString() });
+                                }
                             }
                         }
                     }
+                }
+                else
+                {
+                    // break loop
+                    cnt = Globals.ThisWorkbook.Worksheets.Count;
                 }
             }
             // Sort and return
@@ -1417,6 +1458,20 @@ namespace CalculationEngine
         }
 
         //==============================================================================================
+        // Add a trailing slash to a url if none exists
+        //==============================================================================================
+        private string slashUrl(string url){
+            if ((url != null) && (url != ""))
+            {
+                if (url.Substring(url.Length - 1, 1) != "/")
+                {
+                    url += "/";
+                }
+            }
+            return url;
+        }
+
+        //==============================================================================================
         // Create the xml request string for calculate method from workbook
         //==============================================================================================
         private string CreateTestRequestXml()
@@ -1428,14 +1483,24 @@ namespace CalculationEngine
             strRequest += "<WorkbookName>" + this.Name + ".xlsx</WorkbookName>";
             strRequest += "<INPUTS>";
 
-            //Iterate over input cells
-            foreach (string[] input in this.InputsList())
-            {
-                strRequest += "<item><key>" + input[0] + "</key><value>" + input[1] + "</value></item>";
-            }
-            strRequest += "</INPUTS>";
-            strRequest += "</m:calculate></SOAP-ENV:Body></SOAP-ENV:Envelope>";
+            
+            List<string[]> inputsList = new List<string[]>();
+            inputsList = InputsList();
 
+            // Iterate over input cells, if there are inputs (caught exception if cell not blurred correctly before pressing test)
+            if (inputsList.Count() > 0)
+            {
+                foreach (string[] input in inputsList)
+                {
+                    strRequest += "<item><key>" + input[0] + "</key><value>" + input[1] + "</value></item>";
+                }
+                strRequest += "</INPUTS>";
+                strRequest += "</m:calculate></SOAP-ENV:Body></SOAP-ENV:Envelope>";
+            }
+            else
+            {
+                strRequest = null;
+            }
             return strRequest;
         }
 
@@ -1497,20 +1562,32 @@ namespace CalculationEngine
         //==============================================================================================
         private Excel.Range GetRealRange(Excel.Worksheet ws)
         {
-            //Establish used range of worksheet
+            // Establish used range of worksheet
             Excel.Range used = ws.UsedRange;
 
             // Now force range to start at A1 (it won't if cells in the first row or column are not used)
             // This is necessary in order to calculate absolute cell addresses in the error message refMsg
             // Get the last cell in used range
-            Excel.Range lastCell = null;
-            lastCell = used.SpecialCells(Excel.XlCellType.xlCellTypeLastCell);
-            int maxCol = lastCell.Column;
-            int maxRow = lastCell.Row;
+            Excel.Range rg;
+            try
+            {
+                Excel.Range lastCell = null;
+                lastCell = used.SpecialCells(Excel.XlCellType.xlCellTypeLastCell);
+                int maxCol = lastCell.Column;
+                int maxRow = lastCell.Row;
 
-            // Now cast the full range
-            string usedRange = "A1:" + this.GetExcelColumnName(maxCol) + maxRow.ToString();
-            Excel.Range rg = ws.get_Range(usedRange);
+                // Now cast the full range
+                string usedRange = "A1:" + this.GetExcelColumnName(maxCol) + maxRow.ToString();
+                rg = ws.get_Range(usedRange);
+            }
+            catch (Exception ex)
+            {
+                if (ex != null)
+                {
+                    MessageBox.Show("If you have just changed the value in a cell, you need to move out of it before pressing Test so that the spreadsheet can calculate.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                rg = null;
+            }
 
             return rg;
         }

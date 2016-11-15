@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Office.Tools.Ribbon;
 using System.Windows.Forms;
+using Excel = Microsoft.Office.Interop.Excel;
 using CalculationEngine;
+
 
 namespace CalculationEngine
 {
@@ -43,7 +45,8 @@ namespace CalculationEngine
         }
 
         private void ButtonTest_Click(object sender, RibbonControlEventArgs e)
-        {
+        {           
+            // Show the results form
             FormTest resultsForm = new FormTest();
             resultsForm.ShowDialog();
         }
